@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luma — Render AI para Arquitectos</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:             #F7F6F3;
+    --surface:        #FFFFFF;
+    --surface2:       #F2F1EE;
+    --border:         #E4E2DC;
+    --border2:        #D0CEC6;
+    --accent:         #1A1A18;
+    --highlight:      #2D5BE3;
+    --highlight-soft: #EEF2FD;
+    --green:          #1A7A52;
+    --green-bg:       #EDFAF4;
+    --green-border:   #C8EEE0;
+    --text:           #1A1A18;
+    --text-mid:       #6B6A65;
+    --text-dim:       #A09E97;
+    --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:      0 4px 16px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Geist', system-ui, sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    height: 58px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+
+  .logo-mark {
+    width: 30px; height: 30px;
+    background: #1A1A18;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    color: #ffffff;
+    font-size: 15px;
+  }
+
+  .logo-name {
+    font-family: 'Geist', sans-serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .logo-badge {
+    margin-left: 10px;
+    padding: 3px 9px;
+    background: var(--highlight-soft);
+    color: var(--highlight);
+    font-size: 10.5px;
+    font-weight: 500;
+    border-radius: 4px;
+  }
+
+  .header-right { margin-left: auto; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-mid);
+    font-family: 'Geist', sans-serif;
+    font-size: 12.5px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-ghost:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+
+  /* LAYOUT */
+  .main { display:flex; flex:1; height:calc(100vh - 58px); overflow:hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 272px; min-width: 240px;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  .sb-section {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    flex: 1; overflow: hidden; display: flex; flex-direction: column;
+  }
+
+  .sb-label {
+    font-size: 10.5px; font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* STEPS */
+  .steps-scroll { flex:1; overflow-y:auto; }
+  .steps-scroll::-webkit-scrollbar { width:3px; }
+  .steps-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius:2px; }
+
+  .step-item {
+    display: flex; align-items: flex-start; gap: 11px;
+    padding: 7px 0; opacity: .3; transition: opacity .25s;
+  }
+  .step-item.active { opacity: 1; }
+  .step-item.done   { opacity: .6; }
+
+  .step-node {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    display: grid; place-items: center;
+    font-size: 10px; font-weight: 500; color: var(--text-dim);
+    transition: all .25s; background: var(--surface); flex-shrink: 0; margin-top: 1px;
+  }
+  .step-item.active .step-node { border-color: var(--highlight); color: var(--highlight); background: var(--highlight-soft); }
+  .step-item.done   .step-node { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+
+  .step-line { width:1.5px; height:12px; background: var(--border); margin: 0 10px; border-radius:1px; }
+
+  .step-text { font-size: 12.5px; color: var(--text-mid); line-height: 1.4; padding-top: 2px; }
+  .step-item.active .step-text { color: var(--text); font-weight: 500; }
+
+  /* CHAT PANEL */
+  .chat-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; background: var(--bg); }
+
+  .chat-area {
+    flex:1; overflow-y:auto;
+    padding: 32px 36px 20px;
+    display: flex; flex-direction: column; gap: 20px;
+    scroll-behavior: smooth;
+  }
+  .chat-area::-webkit-scrollbar { width:5px; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius:3px; }
+
+  /* MESSAGES */
+  .msg { display:flex; flex-direction:column; gap:6px; max-width:78%; animation: msgIn .22s ease; }
+  @keyframes msgIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+
+  .msg.assistant { align-self: flex-start; }
+  .msg.user      { align-self: flex-end; }
+
+  .msg-meta { display:flex; align-items:center; gap:7px; }
+  .msg.user .msg-meta { justify-content: flex-end; }
+
+  .msg-av {
+    width: 20px; height: 20px; border-radius: 6px;
+    background: #1A1A18; color: #ffffff;
+    display: grid; place-items: center; flex-shrink: 0;
+    font-size: 10px;
+  }
+
+  .msg-who { font-size: 11px; font-weight: 500; color: var(--text-dim); }
+  .msg.user .msg-who { color: var(--highlight); }
+
+  .bubble {
+    padding: 12px 16px; border-radius: 12px;
+    font-size: 13.5px; line-height: 1.7;
+    color: var(--text); white-space: pre-wrap;
+  }
+  .msg.assistant .bubble {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top-left-radius: 4px; box-shadow: var(--shadow-sm);
+  }
+  .msg.user .bubble {
+    background: var(--accent); color: #fff;
+    border-top-right-radius: 4px;
+  }
+  .bubble.thinking {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+    padding: 12px 16px;
+    display: inline-flex;
+    width: fit-content;
+  }
+
+  /* TYPING DOTS */
+  .dots { display:inline-flex; gap:4px; align-items:center; }
+  .dots span {
+    width:5px; height:5px; border-radius:50%; background: var(--text-dim);
+    animation: blink 1.2s infinite;
+  }
+  .dots span:nth-child(2) { animation-delay:.2s; }
+  .dots span:nth-child(3) { animation-delay:.4s; }
+  @keyframes blink { 0%,80%,100% { opacity:.25; transform:scale(.9); } 40% { opacity:1; transform:scale(1); } }
+
+  /* PROMPT CARD */
+  .prompt-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; border-top-left-radius: 4px;
+    overflow: hidden; box-shadow: var(--shadow-md);
+  }
+  .prompt-card-top {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 16px; background: var(--green-bg);
+    border-bottom: 1px solid var(--green-border);
+  }
+  .prompt-card-lbl {
+    font-size: 11.5px; font-weight: 600; color: var(--green);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .prompt-card-lbl::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--green); display:block; }
+
+  .copy-btn {
+    background: var(--surface); border: 1px solid var(--green-border);
+    color: var(--green); font-family: 'Geist', sans-serif;
+    font-size: 11.5px; font-weight: 500; padding: 5px 13px; border-radius: 6px;
+    cursor: pointer; transition: all .15s;
+  }
+  .copy-btn:hover { background: var(--green); color: #fff; border-color: var(--green); }
+
+  .prompt-body { padding: 16px 18px; }
+  .prompt-body pre {
+    font-family: 'Geist', monospace; font-size: 12px; line-height: 1.8;
+    color: #1E5C3A; white-space: pre-wrap; word-break: break-word;
+  }
+
+  /* CHIPS */
+  .chips { display:flex; flex-wrap:wrap; gap:8px; padding: 2px 0; }
+  .chip {
+    padding: 7px 15px; border-radius: 20px;
+    border: 1.5px solid var(--border); background: var(--surface);
+    color: var(--text-mid); font-family: 'Geist', sans-serif;
+    font-size: 13px; cursor: pointer; transition: all .15s;
+    box-shadow: var(--shadow-sm);
+  }
+  .chip:hover, .chip:active {
+    border-color: var(--highlight); color: var(--highlight);
+    background: var(--highlight-soft);
+  }
+
+  /* INPUT BAR */
+  .input-wrap { padding: 14px 36px 20px; background: var(--bg); border-top: 1px solid var(--border); }
+  .input-row {
+    display: flex; align-items: flex-end; gap: 10px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 10px 10px 10px 18px;
+    transition: border-color .2s, box-shadow .2s;
+    box-shadow: var(--shadow-sm);
+  }
+  .input-row:focus-within {
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 3px rgba(45,91,227,.09), var(--shadow-sm);
+  }
+  .input-row textarea {
+    flex:1; background:transparent; border:none; outline:none;
+    font-family: 'Geist', sans-serif; font-size: 13.5px; color: var(--text);
+    resize: none; height: 22px; line-height: 22px; max-height: 110px; overflow-y:auto;
+  }
+  .input-row textarea::placeholder { color: var(--text-dim); }
+
+  .send-btn {
+    width:36px; height:36px; background:var(--accent); border:none;
+    border-radius:9px; cursor:pointer; display:grid; place-items:center;
+    transition: all .15s; flex-shrink:0;
+  }
+  .send-btn:hover { background:#2D2D28; transform:scale(1.04); }
+  .send-btn:disabled { background: var(--border2); cursor:not-allowed; transform:none; }
+
+  /* WELCOME */
+  .welcome {
+    margin: auto; max-width: 480px;
+    text-align: center; padding: 16px;
+    animation: msgIn .35s ease;
+  }
+  .welcome-ico {
+    width: 60px; height: 60px;
+    background: #1A1A18;
+    border-radius: 16px;
+    display: grid; place-items: center;
+    margin: 0 auto 22px; box-shadow: var(--shadow-md);
+    font-size: 26px; color: #ffffff;
+  }
+  .welcome h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px; color: var(--text);
+    letter-spacing: 0; margin-bottom: 12px; line-height: 1.25;
+  }
+
+  @media (min-width: 661px) {
+    .welcome h2 { letter-spacing: 0.03em; }
+  }
+  .welcome h2 em { font-style: italic; color: var(--text-mid); }
+  .welcome p {
+    font-size: 14px; color: var(--text-mid); line-height: 1.72;
+    margin-bottom: 24px;
+  }
+  .pills { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:28px; }
+  .pill {
+    padding: 5px 13px; border-radius: 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 12px; color: var(--text-mid); box-shadow: var(--shadow-sm);
+  }
+  .btn-primary {
+    background: var(--accent); color: #fff; border: none;
+    font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500;
+    padding: 12px 28px; border-radius: 10px; cursor: pointer;
+    transition: all .15s; display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.14);
+  }
+  .btn-primary:hover { background: #2D2D28; transform:translateY(-1px); }
+
+  @media (max-width: 660px) {
+    .sidebar { display: none; }
+    .chat-area { padding: 20px 18px 16px; }
+    .input-wrap { padding: 12px 18px 16px; }
+    .msg { max-width: 90%; }
+  }
+
+  /* HISTORY PANEL */
+  .history-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 200;
+  }
+  .history-overlay.open { display: block; }
+
+  .history-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.18);
+    backdrop-filter: blur(2px);
+  }
+
+  .history-panel {
+    position: absolute; top: 0; right: 0;
+    width: 380px; max-width: 95vw;
+    height: 100%;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+    animation: slideIn .2s ease;
+  }
+  @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+  .history-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .history-title {
+    font-family: 'Geist', sans-serif;
+    font-size: 15px; font-weight: 500; color: var(--text);
+  }
+
+  .history-close {
+    background: transparent; border: none;
+    color: var(--text-dim); cursor: pointer;
+    width: 30px; height: 30px; border-radius: 7px;
+    display: grid; place-items: center; font-size: 18px;
+    transition: all .15s;
+  }
+  .history-close:hover { background: var(--surface2); color: var(--text); }
+
+  .history-list {
+    flex: 1; overflow-y: auto; padding: 12px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .history-list::-webkit-scrollbar { width: 4px; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .history-empty {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-dim); font-size: 13px; line-height: 1.7;
+  }
+  .history-empty span { font-size: 28px; display: block; margin-bottom: 10px; color: var(--text-dim); }
+
+  .history-item {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; cursor: pointer;
+    transition: all .15s; background: var(--surface);
+  }
+  .history-item:hover { border-color: var(--highlight); background: var(--highlight-soft); }
+
+  .hi-top {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 8px; margin-bottom: 6px;
+  }
+
+  .hi-label {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    flex: 1; line-height: 1.3;
+  }
+
+  .hi-delete {
+    background: transparent; border: none;
+    color: var(--text-dim); cursor: pointer; font-size: 14px;
+    padding: 1px 4px; border-radius: 4px; flex-shrink: 0;
+    transition: all .15s;
+  }
+  .hi-delete:hover { color: #C94040; background: #FEF0F0; }
+
+  .hi-date {
+    font-size: 10.5px; color: var(--text-dim); margin-bottom: 8px;
+  }
+
+  .hi-preview {
+    font-size: 11.5px; color: var(--text-mid); line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  .hi-actions {
+    display: flex; gap: 8px; margin-top: 10px;
+  }
+
+  .hi-btn {
+    flex: 1; padding: 6px 0; border-radius: 7px;
+    font-family: 'Geist', sans-serif; font-size: 11.5px; font-weight: 500;
+    cursor: pointer; transition: all .15s; border: 1px solid var(--border);
+    background: transparent; color: var(--text-mid);
+  }
+  .hi-btn:hover { background: var(--surface2); color: var(--text); }
+  .hi-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .hi-btn.primary:hover { background: #2D2D28; }
+
+  /* modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,0,0.25); backdrop-filter: blur(3px);
+    place-items: center;
+  }
+  .modal-overlay.open { display: grid; }
+
+  .modal-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px; width: 320px; max-width: 90vw;
+    box-shadow: var(--shadow-md); animation: msgIn .2s ease;
+  }
+  .modal-box h3 {
+    font-family: 'Instrument Serif', serif; font-size: 18px;
+    color: var(--text); margin-bottom: 6px; letter-spacing: -0.01em;
+  }
+  .modal-box p { font-size: 12.5px; color: var(--text-mid); margin-bottom: 16px; }
+
+  .modal-input {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: 'Geist', sans-serif; font-size: 13.5px; color: var(--text);
+    background: var(--bg); outline: none; margin-bottom: 14px;
+    transition: border-color .2s;
+  }
+  .modal-input:focus { border-color: var(--highlight); }
+
+  .modal-actions { display: flex; gap: 8px; }
+  .modal-actions button {
+    flex: 1; padding: 9px 0; border-radius: 8px;
+    font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .15s;
+  }
+  .modal-cancel { background: transparent; border: 1px solid var(--border); color: var(--text-mid); }
+  .modal-cancel:hover { background: var(--surface2); }
+  .modal-save { background: var(--accent); border: none; color: #fff; }
+  .modal-save:hover { background: #2D2D28; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">✦</div>
+    <span class="logo-name">Luma</span>
+  </div>
+
+  <div class="header-right" style="display:flex;gap:8px;align-items:center;">
+    <button class="btn-ghost" onclick="openHistory()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1.5" y="1.5" width="10" height="10" rx="2"/>
+        <line x1="4" y1="4.5" x2="9" y2="4.5"/>
+        <line x1="4" y1="6.5" x2="9" y2="6.5"/>
+        <line x1="4" y1="8.5" x2="7" y2="8.5"/>
+      </svg>
+      Historial
+    </button>
+    <button class="btn-ghost" onclick="resetConversation()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 6.5C2 4.01 4.01 2 6.5 2C8.3 2 9.85 3.05 10.55 4.6"/>
+        <path d="M11 6.5C11 8.99 8.99 11 6.5 11C4.7 11 3.15 9.95 2.45 8.4"/>
+        <polyline points="10.2,2.2 10.55,4.6 8.1,4.9"/>
+        <polyline points="2.8,10.8 2.45,8.4 4.9,8.1"/>
+      </svg>
+      Reiniciar
+    </button>
+  </div>
+</header>
+
+<!-- HISTORY PANEL -->
+<div class="history-overlay" id="history-overlay">
+  <div class="history-backdrop" onclick="closeHistory()"></div>
+  <div class="history-panel">
+    <div class="history-header">
+      <span class="history-title">Historial</span>
+      <button class="history-close" onclick="closeHistory()">✕</button>
+    </div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+</div>
+
+<!-- NAME MODAL -->
+<div class="modal-overlay" id="name-modal">
+  <div class="modal-box">
+    <h3>Guardá tu prompt</h3>
+    <p>Poné un nombre para identificar este proyecto fácilmente.</p>
+    <input class="modal-input" id="modal-input" placeholder="Ej: Living Torres del Sol" maxlength="60"
+      onkeydown="if(event.key==='Enter') savePromptConfirm()">
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="modal-save" onclick="savePromptConfirm()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-section">
+      <div class="sb-label">Progreso</div>
+      <div class="steps-scroll" id="steps-wrap">
+
+        <div class="step-item active" data-step="0">
+          <div class="step-node">1</div>
+          <div class="step-text">Tipo de espacio</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item" data-step="1">
+          <div class="step-node">2</div>
+          <div class="step-text">Materiales y acabados</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item" data-step="2">
+          <div class="step-node">3</div>
+          <div class="step-text">Iluminación</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item" data-step="3">
+          <div class="step-node">4</div>
+          <div class="step-text">Estilo visual</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item" data-step="4">
+          <div class="step-node">5</div>
+          <div class="step-text">Decoración y mobiliario</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item" data-step="5">
+          <div class="step-node">6</div>
+          <div class="step-text">Atmósfera y detalles</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item" data-step="6">
+          <div class="step-node">✦</div>
+          <div class="step-text">Prompt generado</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-panel">
+    <div class="chat-area" id="chat-area">
+      <div class="welcome" id="welcome-card">
+        <div class="welcome-ico">✦</div>
+        <h2>Hola, arquitecto.<br><em>Soy Luma.</em></h2>
+        <p>Te ayudo a construir el prompt exacto para que la IA mejore tu render con hiperrealismo, sin cambiar la estructura ni la composición que ya diseñaste.</p>
+        <div class="pills">
+          <span class="pill">Estructura preservada</span>
+          <span class="pill">Materiales respetados</span>
+          <span class="pill">Iluminación mejorada</span>
+          <span class="pill">Prompt para Gemini</span>
+        </div>
+        <button class="btn-primary" onclick="startConversation()">
+          Empezar
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7H11M11 7L8 4M11 7L8 10"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="input-wrap">
+      <div class="input-row">
+        <textarea id="user-input" placeholder="Escribí tu respuesta…" disabled rows="1"
+          oninput="autoResize(this)"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7.5 2V13M7.5 2L3.5 6M7.5 2L11.5 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function autoResize(el) {
+  el.style.height = '22px';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+}
+
+const SYSTEM_PROMPT = `Eres Luma, un asistente especializado en ayudar a arquitectos a generar prompts precisos para Google ImageFX / Gemini Imagen 3.
+
+Tu objetivo es mejorar renders de arquitectura que el usuario ya generó. Reglas absolutas:
+
+CONSERVACIÓN ESTRICTA:
+- Preservar EXACTAMENTE la estructura, composición y distribución espacial del render original
+- Los materiales deben mantenerse IDÉNTICOS a los del render original. Si el usuario indica que dos superficies tienen el mismo material, el prompt debe especificarlo explícitamente
+- NUNCA agregar fuentes de luz artificiales nuevas. Solo se pueden mejorar o encender/apagar las luminarias que ya existen en el render. La luz natural (sol, cielo, ventanas) sí se puede ajustar libremente
+- NO modificar la arquitectura: no agregar ni quitar ventanas, paredes, aberturas ni elementos estructurales
+
+MEJORAS PERMITIDAS:
+- Mayor fotorrealismo y calidad de texturas en los materiales existentes
+- Mejorar la iluminación natural y la calidad de las fuentes de luz ya presentes
+- Agregar decoración, mobiliario, plantas y objetos de ambientación
+- Mejorar atmósfera, reflejos, sombras y detalles de materiales
+
+REGLA CRÍTICA DE CONVERSACIÓN:
+- UNA SOLA PREGUNTA por mensaje. Sin excepciones.
+- Nunca combines dos preguntas en un mismo mensaje.
+- Cuando tengas suficiente info (6 intercambios), generá el prompt final.
+
+SECUENCIA DE PREGUNTAS (una por turno):
+1. Tipo de espacio (interior/exterior, uso, ambiente general)
+2. Materiales principales — preguntá si hay superficies que comparten el mismo material
+3. Fuentes de luz existentes en el render (naturales y artificiales ya presentes)
+4. Estilo visual y nivel de realismo buscado
+5. Decoración, mobiliario y vegetación deseados
+6. Atmósfera general (hora del día, clima, sensación)
+
+FORMATO DE RESPUESTA:
+Cada mensaje tuyo (excepto el prompt final) termina con:
+###OPTIONS###opción 1|opción 2|opción 3|opción 4###END_OPTIONS###
+Las opciones deben corresponder exactamente a la pregunta que acabás de hacer.
+
+PROMPT FINAL:
+- En INGLÉS, optimizado para Google ImageFX / Gemini Imagen 3
+- Formato:
+  MAIN PROMPT: [descripción completa]
+  MATERIAL CONSISTENCY: [qué superficies comparten el mismo material]
+  LIGHTING RULES: enhance existing light sources only — no new artificial fixtures; natural light adjustments allowed
+  NEGATIVE PROMPT: [lo que no debe hacer]
+  TOOL: Google ImageFX — Gemini Imagen 3
+  SETTINGS: Style strength 30–45% to preserve original structure
+- Delimitado con ###PROMPT_START### y ###PROMPT_END###
+
+Sé profesional pero cálido. Tutea al usuario. Usá terminología arquitectónica.`;
+
+let history = [];
+let currentStep = 0;
+let thinking = false;
+let lastPrompt = null;
+let variationMode = false;
+
+function autoStep() { updateStep(Math.min(currentStep + 1, 6)); }
+
+function updateStep(step) {
+  currentStep = step;
+  document.querySelectorAll('.step-item').forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i < step) el.classList.add('done');
+    else if (i === step) el.classList.add('active');
+  });
+}
+
+function parseMd(text) {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
+}
+
+function addMsg(role, content, isPrompt = false) {
+  const ca = document.getElementById('chat-area');
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${role}`;
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  if (role === 'assistant') {
+    meta.innerHTML = `<div class="msg-av">✦</div><span class="msg-who">Luma</span>`;
+  } else {
+    meta.innerHTML = `<span class="msg-who">Vos</span>`;
+  }
+  wrap.appendChild(meta);
+
+  if (isPrompt) {
+    const card = document.createElement('div');
+    card.className = 'prompt-card';
+
+    const top = document.createElement('div');
+    top.className = 'prompt-card-top';
+    const lbl = document.createElement('div');
+    lbl.className = 'prompt-card-lbl';
+    lbl.textContent = 'Prompt generado';
+    top.appendChild(lbl);
+
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:8px;';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'copy-btn';
+    saveBtn.style.cssText = 'background:var(--highlight-soft);color:var(--highlight);border-color:#C5D5F8;';
+    saveBtn.textContent = '＋ Guardar';
+    saveBtn.addEventListener('click', () => openModal(content));
+    actions.appendChild(saveBtn);
+
+    const cpyBtn = document.createElement('button');
+    cpyBtn.className = 'copy-btn';
+    cpyBtn.textContent = 'Copiar';
+    cpyBtn.addEventListener('click', function() {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(content).then(() => {
+          cpyBtn.textContent = '✓ Copiado';
+          setTimeout(() => cpyBtn.textContent = 'Copiar', 2500);
+        }).catch(() => fallbackCopy(content, cpyBtn));
+      } else {
+        fallbackCopy(content, cpyBtn);
+      }
+    });
+    actions.appendChild(cpyBtn);
+    top.appendChild(actions);
+
+    const body = document.createElement('div');
+    body.className = 'prompt-body';
+    const pre = document.createElement('pre');
+    pre.textContent = content;
+    body.appendChild(pre);
+
+    card.appendChild(top);
+    card.appendChild(body);
+    wrap.appendChild(card);
+  } else {
+    const bub = document.createElement('div');
+    bub.className = 'bubble';
+    bub.innerHTML = parseMd(content);
+    wrap.appendChild(bub);
+  }
+
+  ca.appendChild(wrap);
+  ca.scrollTop = ca.scrollHeight;
+}
+
+function fallbackCopy(text, btn) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); btn.textContent = '✓ Copiado'; }
+  catch(e) { btn.textContent = 'Seleccioná el texto'; }
+  document.body.removeChild(ta);
+  setTimeout(() => btn.textContent = 'Copiar', 2500);
+}
+
+function addThinking() {
+  const ca = document.getElementById('chat-area');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg assistant'; wrap.id = 'thinking-msg';
+  wrap.innerHTML = `
+    <div class="msg-meta">
+      <div class="msg-av">✦</div>
+      <span class="msg-who">Luma</span>
+    </div>
+    <div class="bubble thinking">
+      <div class="dots"><span></span><span></span><span></span></div>
+    </div>`;
+  ca.appendChild(wrap);
+  ca.scrollTop = ca.scrollHeight;
+}
+
+function removeThinking() {
+  const t = document.getElementById('thinking-msg'); if (t) t.remove();
+}
+
+function addChips(options) {
+  const ca = document.getElementById('chat-area');
+  const wrap = document.createElement('div');
+  wrap.className = 'chips'; wrap.id = 'current-chips';
+  options.forEach(opt => {
+    const chip = document.createElement('button');
+    chip.className = 'chip'; chip.textContent = opt;
+    chip.addEventListener('click', () => {
+      document.getElementById('user-input').value = opt;
+      sendMessage();
+    });
+    wrap.appendChild(chip);
+  });
+  ca.appendChild(wrap);
+  ca.scrollTop = ca.scrollHeight;
+}
+
+function removeChips() {
+  const c = document.getElementById('current-chips'); if (c) c.remove();
+}
+
+function offerVariation() {
+  const ca = document.getElementById('chat-area');
+  const card = document.createElement('div');
+  card.className = 'msg assistant'; card.id = 'variation-offer';
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.innerHTML = `<div class="msg-av">✦</div><span class="msg-who">Luma</span>`;
+
+  const bub = document.createElement('div');
+  bub.className = 'bubble';
+  bub.textContent = '¿Querés ajustar algo del prompt antes de usarlo?';
+
+  card.appendChild(meta); card.appendChild(bub);
+  ca.appendChild(card);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'chips'; wrap.id = 'current-chips';
+
+  const categories = [
+    { label: '💡 Iluminación', value: 'Quiero cambiar la iluminación' },
+    { label: '🪵 Material', value: 'Quiero cambiar un material' },
+    { label: '🪑 Objeto', value: 'Quiero agregar o cambiar un objeto' },
+    { label: '✅ Está perfecto', value: 'No, el prompt está perfecto' },
+  ];
+
+  categories.forEach(cat => {
+    const chip = document.createElement('button');
+    chip.className = 'chip'; chip.textContent = cat.label;
+    chip.addEventListener('click', () => {
+      removeChips();
+      document.getElementById('variation-offer')?.remove();
+      if (cat.value === 'No, el prompt está perfecto') {
+        addMsg('user', cat.label);
+        addMsg('assistant', '¡Perfecto! Ya tenés tu prompt listo para usar en Gemini ImageFX. Cuando quieras generar otro, tocá "Reiniciar".');
+      } else {
+        addMsg('user', cat.label);
+        startVariationFlow(cat.value);
+      }
+    });
+    wrap.appendChild(chip);
+  });
+
+  ca.appendChild(wrap);
+  ca.scrollTop = ca.scrollHeight;
+}
+
+function startVariationFlow(category) {
+  variationMode = true;
+  let question = '', chips = [];
+
+  if (category.includes('iluminación')) {
+    question = '¿Qué querés cambiar de la iluminación?';
+    chips = ['Luz de día natural', 'Atardecer / golden hour', 'Noche con luz artificial', 'Ambiente nublado / difuso', 'Más dramática y contrastada'];
+  } else if (category.includes('material')) {
+    question = '¿Cuál material querés cambiar? Describí la superficie y cómo querés que quede.';
+    chips = ['El piso', 'Las paredes', 'El cielorraso', 'La mesada / encimera', 'La fachada'];
+  } else if (category.includes('objeto')) {
+    question = '¿Qué objeto querés agregar o cambiar en la escena?';
+    chips = ['Agregar plantas / vegetación', 'Cambiar el mobiliario', 'Agregar arte / cuadros', 'Agregar alfombra / textiles', 'Agregar iluminaria decorativa'];
+  }
+
+  addMsg('assistant', question);
+  setTimeout(() => addChips(chips), 180);
+}
+
+function buildWelcome() {
+  const ca = document.getElementById('chat-area');
+  ca.innerHTML = '';
+  const w = document.createElement('div');
+  w.className = 'welcome'; w.id = 'welcome-card';
+  w.innerHTML = `
+    <div class="welcome-ico">✦</div>
+    <h2>Hola, arquitecto.<br><em>Soy Luma.</em></h2>
+    <p>Te ayudo a construir el prompt exacto para que la IA mejore tu render con hiperrealismo, sin cambiar la estructura ni la composición que ya diseñaste.</p>
+    <div class="pills">
+      <span class="pill">Estructura preservada</span>
+      <span class="pill">Materiales respetados</span>
+      <span class="pill">Iluminación mejorada</span>
+      <span class="pill">Prompt para Gemini</span>
+    </div>
+    <button class="btn-primary" onclick="startConversation()">
+      Empezar
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7H11M11 7L8 4M11 7L8 10"/>
+      </svg>
+    </button>`;
+  ca.appendChild(w);
+}
+
+function resetConversation() {
+  history = []; currentStep = 0; thinking = false;
+  lastPrompt = null; variationMode = false;
+  updateStep(0);
+  const inp = document.getElementById('user-input');
+  inp.disabled = true; inp.value = ''; inp.style.height = '22px';
+  document.getElementById('send-btn').disabled = true;
+  buildWelcome();
+}
+
+function startConversation() {
+  document.getElementById('welcome-card').remove();
+  document.getElementById('user-input').disabled = false;
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('user-input').focus();
+  addMsg('assistant', '¡Perfecto! Para empezar, contame: ¿qué tipo de espacio es el de tu render?');
+  addChips(['Living / comedor', 'Dormitorio', 'Cocina', 'Fachada exterior']);
+  updateStep(0);
+}
+
+async function sendMessage() {
+  const inp = document.getElementById('user-input');
+  const text = inp.value.trim();
+  if (!text || thinking) return;
+
+  removeChips();
+  addMsg('user', text);
+  inp.value = ''; inp.style.height = '22px';
+  thinking = true;
+  document.getElementById('send-btn').disabled = true;
+
+  history.push({ role: 'user', content: text });
+
+  const messages = variationMode && lastPrompt
+    ? [
+        ...history.slice(0, -1),
+        {
+          role: 'user',
+          content: `Tengo este prompt generado:\n\n${lastPrompt}\n\nQuiero hacer una modificación puntual: ${text}\n\nPor favor, preguntame UNA sola pregunta específica para entender bien el cambio que quiero, o si ya tenés suficiente info, regenerá el prompt completo con esa modificación aplicada (usando ###PROMPT_START### y ###PROMPT_END###). Recordá las reglas: no agregar fuentes de luz artificiales nuevas, preservar la estructura, mantener los materiales consistentes.`
+        }
+      ]
+    : history;
+
+  addThinking();
+  if (!variationMode) autoStep();
+
+  try {
+    // ── CAMBIO CLAVE: llama a tu propio backend, no a Anthropic directamente ──
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1400,
+        system: SYSTEM_PROMPT,
+        messages
+      })
+    });
+
+    const data = await res.json();
+    const full = data.content.map(b => b.text || '').join('');
+    removeThinking();
+
+    const promptMatch = full.match(/###PROMPT_START###([\s\S]*?)###PROMPT_END###/);
+
+    if (promptMatch) {
+      const before = full.split('###PROMPT_START###')[0].trim();
+      const promptTxt = promptMatch[1].trim();
+      const after = full.split('###PROMPT_END###')[1]?.trim();
+
+      if (before) addMsg('assistant', before);
+      addMsg('assistant', promptTxt, true);
+      if (after) addMsg('assistant', after);
+
+      lastPrompt = promptTxt;
+      variationMode = false;
+      updateStep(6);
+      setTimeout(() => offerVariation(), 400);
+
+    } else {
+      const optMatch = full.match(/###OPTIONS###([\s\S]*?)###END_OPTIONS###/);
+      const clean = full.replace(/###OPTIONS###[\s\S]*?###END_OPTIONS###/, '').trim();
+      addMsg('assistant', clean);
+      if (optMatch) {
+        const opts = optMatch[1].split('|').map(o => o.trim()).filter(Boolean);
+        setTimeout(() => addChips(opts), 180);
+      }
+    }
+
+    history.push({ role: 'assistant', content: full });
+
+  } catch (err) {
+    removeThinking();
+    addMsg('assistant', 'Hubo un error de conexión. Por favor, intentá de nuevo.');
+    console.error(err);
+  }
+
+  thinking = false;
+  document.getElementById('send-btn').disabled = false;
+  inp.focus();
+}
+
+// ── HISTORY ──
+const STORAGE_KEY = 'luma_prompts_v1';
+let pendingPromptText = null;
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveHistory(list) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch(e) {}
+}
+
+function openModal(promptText) {
+  pendingPromptText = promptText;
+  const input = document.getElementById('modal-input');
+  input.value = '';
+  document.getElementById('name-modal').classList.add('open');
+  setTimeout(() => input.focus(), 120);
+}
+
+function closeModal() {
+  document.getElementById('name-modal').classList.remove('open');
+  pendingPromptText = null;
+}
+
+function savePromptConfirm() {
+  const label = document.getElementById('modal-input').value.trim() || 'Prompt sin nombre';
+  if (!pendingPromptText) { closeModal(); return; }
+
+  const list = loadHistory();
+  list.unshift({
+    id: Date.now(), label, prompt: pendingPromptText,
+    date: new Date().toLocaleDateString('es-AR', { day:'2-digit', month:'short', year:'numeric' })
+  });
+  if (list.length > 10) list.splice(10);
+  saveHistory(list);
+  closeModal();
+
+  document.querySelectorAll('.copy-btn').forEach(b => {
+    if (b.textContent.includes('Guardar')) {
+      b.textContent = '✓ Guardado';
+      setTimeout(() => b.textContent = '＋ Guardar', 2000);
+    }
+  });
+}
+
+function openHistory() {
+  renderHistoryList();
+  document.getElementById('history-overlay').classList.add('open');
+}
+
+function closeHistory() {
+  document.getElementById('history-overlay').classList.remove('open');
+}
+
+function renderHistoryList() {
+  const list = loadHistory();
+  const container = document.getElementById('history-list');
+  container.innerHTML = '';
+
+  if (list.length === 0) {
+    container.innerHTML = `<div class="history-empty"><span>📄</span>Todavía no guardaste ningún prompt.<br>Generá uno y tocá <strong>＋ Guardar</strong>.</div>`;
+    return;
+  }
+
+  list.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'history-item';
+    const preview = item.prompt.replace(/\n/g, ' ').substring(0, 120) + '…';
+    el.innerHTML = `
+      <div class="hi-top">
+        <div class="hi-label">${item.label}</div>
+        <button class="hi-delete" onclick="deleteHistoryItem(${item.id}, event)">✕</button>
+      </div>
+      <div class="hi-date">${item.date}</div>
+      <div class="hi-preview">${preview}</div>
+      <div class="hi-actions">
+        <button class="hi-btn" onclick="copyHistoryItem(${item.id}, this)">Copiar</button>
+        <button class="hi-btn primary" onclick="useHistoryItem(${item.id})">Usar como base</button>
+      </div>`;
+    container.appendChild(el);
+  });
+}
+
+function deleteHistoryItem(id, e) {
+  e.stopPropagation();
+  saveHistory(loadHistory().filter(i => i.id !== id));
+  renderHistoryList();
+}
+
+function copyHistoryItem(id, btn) {
+  const item = loadHistory().find(i => i.id === id);
+  if (!item) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(item.prompt).then(() => {
+      btn.textContent = '✓ Copiado';
+      setTimeout(() => btn.textContent = 'Copiar', 2000);
+    }).catch(() => fallbackCopy(item.prompt, btn));
+  } else {
+    fallbackCopy(item.prompt, btn);
+  }
+}
+
+function useHistoryItem(id) {
+  const item = loadHistory().find(i => i.id === id);
+  if (!item) return;
+  closeHistory();
+  resetConversation();
+  setTimeout(() => {
+    document.getElementById('welcome-card').remove();
+    document.getElementById('user-input').disabled = false;
+    document.getElementById('send-btn').disabled = false;
+    lastPrompt = item.prompt;
+    variationMode = false;
+    updateStep(6);
+    addMsg('assistant', `Retomé el prompt de "${item.label}". ¿Qué querés ajustar?`);
+    setTimeout(() => offerVariation(), 300);
+  }, 100);
+}
+</script>
+</body>
+</html>
